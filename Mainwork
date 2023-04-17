@@ -1,0 +1,95 @@
+public class MainActivity extends AppCompatActivity {
+
+
+    ActivityMainBinding binding;
+    FirebaseFirestore db;
+
+
+
+    ArrayList<UserModel> allDataList;
+
+    myAdapter adapter;
+
+
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        binding=ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        db= FirebaseFirestore.getInstance();
+
+
+
+
+
+        getAllData();
+
+        binding.button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                allDataList.clear();
+
+                String name = binding.editTextTextPersonName.getText().toString();
+                String email = binding.editTextTextPersonName2.getText().toString();
+
+                UserModel data  = new UserModel(name,email);
+
+
+                db.collection("user").document().set(data).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+
+                        if(task.isSuccessful())
+                        {
+                            Toast.makeText(MainActivity.this, "Data Inserted", Toast.LENGTH_SHORT).show();
+                        }
+
+                    }
+                });
+
+
+            }
+        });
+
+
+
+
+
+    }
+
+    public void getAllData()
+    {
+
+
+        allDataList=new ArrayList<>();
+        allDataList.clear();
+        db.collection("user").addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+
+                if(error== null)
+                {
+                    List<UserModel> data = value.toObjects(UserModel.class);
+
+                    allDataList.addAll(data);
+
+                    binding.RecyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+
+                    adapter = new myAdapter(MainActivity.this,allDataList);
+
+                    binding.RecyclerView.setAdapter(adapter);
+
+
+                }
+
+
+            }
+        });
+    }
+
+
+}
